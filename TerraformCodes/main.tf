@@ -24,24 +24,22 @@ module "security" {
 
   name_prefix = var.name_prefix
   vpc_id      = module.vpc.vpc_id
+
+  public_subnet_01_id = module.vpc.public_subnet_01_id
+  public_subnet_02_id = module.vpc.public_subnet_02_id
 }
 
 # ────────────────────────────────
-# EC2 Instance
+# Application Load Balancer (ALB)
 # ────────────────────────────────
-module "ec2" {
-  source = "./modules/ec2"
+module "alb" {
+  source = "./modules/alb"
 
-  name_prefix       = var.name_prefix
-  ami_id            = var.ami_id
-  instance_type     = var.instance_type
+  name_prefix = var.name_prefix
+  vpc_id      = module.vpc.vpc_id
 
-  root_volume_size = var.root_volume_size
-  root_volume_type = var.root_volume_type
-  delete_on_termination = var.delete_on_termination
+  public_subnet_01_id = module.vpc.public_subnet_01_id
+  public_subnet_02_id = module.vpc.public_subnet_02_id
 
-  subnet_id         = module.vpc.public_subnet_01_id
-  security_group_id = module.security.security_group_id
-
-  key_name          = module.security.key_name
+  alb_sg_id = module.security.security_group2_id
 }

@@ -1,93 +1,151 @@
-# Security Group
-resource "aws_security_group" "test_server_sg" {
-  name        = "${var.name_prefix}-sg"
-  description = "Allow SSH(22), HTTP(80), HTTPS(443), Grafana, Prometheus, Node Exporter"
+# # Security Group
+# resource "aws_security_group" "ecs-tasks-sg" {
+#   name        = "${var.name_prefix}-tasks-sg"
+#   description = "Allow 3001 and 3002 inbound traffic from alb sg"
+#   vpc_id      = var.vpc_id
+
+#   ingress {
+#     description = "For user service"
+#     from_port   = 3001
+#     to_port     = 3001
+#     protocol    = "tcp"
+#     security_groups = [aws_security_group.ecs-alb-sg.id]
+#   }
+
+#   ingress {
+#     description = "For product service"
+#     from_port   = 3002
+#     to_port     = 3002
+#     protocol    = "tcp"
+#     security_groups = [aws_security_group.ecs-alb-sg.id]
+#   }
+
+#   egress {
+#     description = "Allow all outbound"
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   tags = {
+#     Name        = "${var.name_prefix}-tasks-sg"
+#     Environment = "dev"
+#     Owner       = var.name_prefix
+#   }
+# }
+
+# resource "aws_security_group" "ecs-alb-sg" {
+#   name        = "${var.name_prefix}-alb-sg"
+#   description = "Allow inbound traffic from anywhere"
+#   vpc_id      = var.vpc_id
+
+#   ingress {
+#     description = "HTTP access from anywhere"
+#     from_port   = 80
+#     to_port     = 80
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   egress {
+#     description = "Allow user service outbound to tasks SG"
+#     from_port   = 3001
+#     to_port     = 3001
+#     protocol    = "tcp"
+#     security_groups = [aws_security_group.ecs-tasks-sg.id]
+#   }
+
+#   egress {
+#     description = "Allow product service outbound to tasks SG"
+#     from_port   = 3002
+#     to_port     = 3002
+#     protocol    = "tcp"
+#     security_groups = [aws_security_group.ecs-tasks-sg.id]
+#   }
+
+#   tags = {
+#     Name        = "${var.name_prefix}-alb-sg"
+#     Environment = "dev"
+#     Owner       = var.name_prefix
+#   }
+# }
+
+resource "aws_security_group" "ecs_alb_sg" {
+  name        = "${var.name_prefix}-alb-sg"
+  description = "ALB security group"
   vpc_id      = var.vpc_id
 
-  ingress {
-    description = "SSH from anywhere - IPv4"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTP from anywhere - IPv4"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTPS from anywhere - IPv4"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Grafana"
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Prometheus"
-    from_port   = 9090
-    to_port     = 9090
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "Node Exporter"
-    from_port   = 9100
-    to_port     = 9100
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    description = "Allow all outbound"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   tags = {
-    Name        = "${var.name_prefix}-sg"
+    Name        = "${var.name_prefix}-alb-sg"
     Environment = "dev"
     Owner       = var.name_prefix
   }
 }
 
-# Generate SSH key
-resource "tls_private_key" "ssh_key" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-# Create AWS key pair
-resource "aws_key_pair" "generated_key" {
-  key_name   = "${var.name_prefix}-key"
-  public_key = tls_private_key.ssh_key.public_key_openssh
+resource "aws_security_group" "ecs_tasks_sg" {
+  name        = "${var.name_prefix}-tasks-sg"
+  description = "ECS tasks security group"
+  vpc_id      = var.vpc_id
 
   tags = {
-    Name        = "${var.name_prefix}-key"
+    Name        = "${var.name_prefix}-tasks-sg"
     Environment = "dev"
     Owner       = var.name_prefix
   }
 }
 
-# Save the private key locally
-resource "local_file" "private_pem" {
-  content         = tls_private_key.ssh_key.private_key_pem
-  filename        = "${var.name_prefix}.pem"
-  file_permission = "0600"
+resource "aws_security_group_rule" "tasks_user_service" {
+  type                     = "ingress"
+  from_port                = 3001
+  to_port                  = 3001
+  protocol                 = "tcp"
+  security_group_id         = aws_security_group.ecs_tasks_sg.id
+  source_security_group_id  = aws_security_group.ecs_alb_sg.id
+}
+
+resource "aws_security_group_rule" "tasks_product_service" {
+  type                     = "ingress"
+  from_port                = 3002
+  to_port                  = 3002
+  protocol                 = "tcp"
+  security_group_id         = aws_security_group.ecs_tasks_sg.id
+  source_security_group_id  = aws_security_group.ecs_alb_sg.id
+}
+
+resource "aws_security_group_rule" "alb_http_in" {
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  security_group_id = aws_security_group.ecs_alb_sg.id
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "HTTP from internet"
+}
+
+resource "aws_security_group_rule" "tasks_egress_all" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  security_group_id = aws_security_group.ecs_tasks_sg.id
+  cidr_blocks       = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "alb_egress_user_service" {
+  type                     = "egress"
+  from_port                = 3001
+  to_port                  = 3001
+  protocol                 = "tcp"
+  security_group_id         = aws_security_group.ecs_alb_sg.id
+  source_security_group_id  = aws_security_group.ecs_tasks_sg.id
+}
+
+resource "aws_security_group_rule" "alb_egress_product_service" {
+  type                     = "egress"
+  from_port                = 3002
+  to_port                  = 3002
+  protocol                 = "tcp"
+  security_group_id         = aws_security_group.ecs_alb_sg.id
+  source_security_group_id  = aws_security_group.ecs_tasks_sg.id
 }

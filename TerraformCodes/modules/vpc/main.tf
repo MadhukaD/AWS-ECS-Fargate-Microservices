@@ -66,20 +66,41 @@ resource "aws_subnet" "private_subnet_02" {
 }
 
 # NAT Gateway
-resource "aws_eip" "nat_eip" {
+resource "aws_eip" "nat1_eip" {
   tags = {
-    Name        = "${var.name_prefix}-nat-eip"
+    Name        = "${var.name_prefix}-nat1-eip"
     Environment = "dev"
     Owner       = var.name_prefix
   }
 }
 
-resource "aws_nat_gateway" "natgw" {
-  allocation_id = aws_eip.nat_eip.id
+resource "aws_eip" "nat2_eip" {
+  tags = {
+    Name        = "${var.name_prefix}-nat2-eip"
+    Environment = "dev"
+    Owner       = var.name_prefix
+  }
+}
+
+resource "aws_nat_gateway" "natgw1a" {
+  allocation_id = aws_eip.nat1_eip.id
   subnet_id     = aws_subnet.public_subnet_01.id
 
   tags = {
-    Name        = "${var.name_prefix}-natgw"
+    Name        = "${var.name_prefix}-natgw1a"
+    Environment = "dev"
+    Owner       = var.name_prefix
+  }
+
+  depends_on = [aws_internet_gateway.igw]
+}
+
+resource "aws_nat_gateway" "natgw1b" {
+  allocation_id = aws_eip.nat2_eip.id
+  subnet_id     = aws_subnet.public_subnet_02.id
+
+  tags = {
+    Name        = "${var.name_prefix}-natgw1b"
     Environment = "dev"
     Owner       = var.name_prefix
   }
@@ -103,21 +124,38 @@ resource "aws_route_table" "public_rt" {
   }
 }
 
-resource "aws_route_table" "private_rt" {
+resource "aws_route_table" "private_rt1" {
   vpc_id = aws_vpc.main.id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.natgw.id
+    nat_gateway_id = aws_nat_gateway.natgw1a.id
   }
 
   tags = {
-    Name        = "${var.name_prefix}-private-rt"
+    Name        = "${var.name_prefix}-private-rt1"
     Environment = "dev"
     Owner       = var.name_prefix
   }
 
-  depends_on = [aws_nat_gateway.natgw]
+  depends_on = [aws_nat_gateway.natgw1a]
+}
+
+resource "aws_route_table" "private_rt2" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.natgw1b.id
+  }
+
+  tags = {
+    Name        = "${var.name_prefix}-private-rt2"
+    Environment = "dev"
+    Owner       = var.name_prefix
+  }
+
+  depends_on = [aws_nat_gateway.natgw1b]
 }
 
 # Route table associations
@@ -133,10 +171,10 @@ resource "aws_route_table_association" "public_subnet_02" {
 
 resource "aws_route_table_association" "private_subnet_01" {
   subnet_id      = aws_subnet.private_subnet_01.id
-  route_table_id = aws_route_table.private_rt.id
+  route_table_id = aws_route_table.private_rt1.id
 }
 
 resource "aws_route_table_association" "private_subnet_02" {
   subnet_id      = aws_subnet.private_subnet_02.id
-  route_table_id = aws_route_table.private_rt.id
+  route_table_id = aws_route_table.private_rt2.id
 }

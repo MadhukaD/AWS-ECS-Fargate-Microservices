@@ -1,67 +1,37 @@
 variable "name_prefix" {
   description = "Name prefix used for tagging and resource names"
   type        = string
-  default     = "Test-Server"
+  default     = "fargate-microservices"
 }
 
 variable "aws_access_key" {
   description = "instance_type of VM"
   type        = string
-  default     = "AddYourAccessKey"
+  default     = "AKIAVCELOVQB76BSVD5E"
 }
 
 variable "aws_secret_key" {
   description = "instance_type of VM"
   type        = string
-  default     = "AddYourSecretKey" 
+  default     = "K4WP7J97nPkDnkh+UZr4YwMpgYsW0c1u+kO5mLFn" 
 }
 
 variable "aws_region" {
   description = "AWS region to deploy into"
   type        = string
-  default     = "ap-southeast-2"
+  default     = "ap-southeast-1"
 }
 
 variable "availability_zones" {
   description = "AZs to use (order matters). Provide at least 2 AZs for HA split."
   type        = list(string)
-  default     = ["ap-southeast-2a", "ap-southeast-2b"]
+  default     = ["ap-southeast-1a", "ap-southeast-1b"]
 }
 
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
   default     = "10.80.0.0/16"
-}
-
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t2.micro"
-}
-
-variable "ami_id" {
-  description = "AMI ID to use for the EC2 instance (provide manually)"
-  type        = string
-  default     = "ami-01361d3186814b895"
-}
-
-variable "root_volume_size" {
-  description = "Root EBS volume size in GB"
-  type        = number
-  default     = 30
-}
-
-variable "root_volume_type" {
-  description = "Root EBS volume type"
-  type        = string
-  default     = "gp3"
-}
-
-variable "delete_on_termination" {
-  description = "Whether to delete the root volume on termination"
-  type        = bool
-  default     = true
 }
 
 variable "public_subnet_01_cidr" {

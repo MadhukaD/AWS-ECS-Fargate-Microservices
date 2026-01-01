@@ -17,3 +17,8 @@ variable "public_subnet_02_id" {
   description = "Public subnet 2 ID"
   type        = string
 }
+
+variable "alb_sg_id" {
+  description = "ALB Security Group ID"
+  type        = string
+}

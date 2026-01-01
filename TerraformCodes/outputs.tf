@@ -28,27 +28,57 @@ output "internet_gateway_id" {
   value       = module.vpc.internet_gateway_id
 }
 
-output "nat_gateway_id" {
-  description = "NAT Gateway ID"
-  value       = module.vpc.nat_gateway_id
+output "nat_gateway1_id" {
+  description = "NAT Gateway 1 ID"
+  value       = module.vpc.nat_gateway1_id
 }
 
-output "security_group_id" {
-  description = "Security Group ID"
-  value       = module.security.security_group_id
+output "nat_gateway2_id" {
+  description = "NAT Gateway 2 ID"
+  value       = module.vpc.nat_gateway2_id
 }
 
-output "ec2_instance_id" {
-  description = "Instance ID"
-  value       = module.ec2.instance_id
+output "security_group1_id" {
+  description = "Security Group1 ID"
+  value       = module.security.security_group1_id
 }
 
-output "ec2_public_ip" {
-  description = "Instance public IP (use to SSH)"
-  value       = module.ec2.public_ip
+output "security_group2_id" {
+  description = "Security Group2 ID"
+  value       = module.security.security_group2_id
 }
 
-output "private_key_file" {
-  description = "Local private key file saved by Terraform (use chmod 600 on this file before SSH)"
-  value       = module.security.private_key_path
+output "alb_name" {
+  description = "Name of the Application Load Balancer"
+  value       = module.alb.alb_name
+}
+
+output "alb_arn" {
+  description = "ARN of the Application Load Balancer"
+  value       = module.alb.alb_arn
+}
+
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  value       = module.alb.alb_dns_name
+}
+
+output "alb_zone_id" {
+  description = "Route53 hosted zone ID of the ALB"
+  value       = module.alb.alb_zone_id
+}
+
+output "user_target_group_arn" {
+  description = "ARN of the user service target group"
+  value       = module.alb.user_target_group_arn
+}
+
+output "product_target_group_arn" {
+  description = "ARN of the product service target group"
+  value       = module.alb.product_target_group_arn
+}
+
+output "http_listener_arn" {
+  description = "ARN of the HTTP listener (port 80)"
+  value       = module.alb.http_listener_arn
 }
