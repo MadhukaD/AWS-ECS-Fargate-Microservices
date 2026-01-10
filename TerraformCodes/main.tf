@@ -52,3 +52,13 @@ module "codecommit_ecr" {
 
   name_prefix = var.name_prefix
 }
+
+# # ────────────────────────────────
+# # CodeBuild projects and IAM
+# # ────────────────────────────────
+# module "codebuild" {
+#   source = "./modules/codebuild"
+
+#   user_ecr_repository_arn    = module.codecommit_ecr.user_ecr_repository_arn
+#   product_ecr_repository_arn = module.codecommit_ecr.product_ecr_repository_arn
+# }

@@ -1,0 +1,59 @@
+aws s3api get-bucket-policy \
+  --bucket fargate-microservices-artifact-bucket
+
+aws codepipeline create-pipeline \
+  --cli-input-json file://pipeline.json \
+  --region ap-southeast-1
+
+# 1. Fetch current pipeline
+aws codepipeline get-pipeline \
+  --name fargate-microservices-pipeline \
+  --region ap-southeast-1 > current-pipeline.json
+
+# 2. Edit current-pipeline.json (stages/actions only)
+
+# 3. Update pipeline
+aws codepipeline update-pipeline \
+  --cli-input-json file://current-pipeline.json \
+  --region ap-southeast-1
+
+aws codepipeline delete-pipeline \
+  --name fargate-microservices-pipeline \
+  --region ap-southeast-1
+
+aws codepipeline start-pipeline-execution \
+  --name fargate-microservices-pipeline \
+  --region ap-southeast-1 \
+  > /dev/null
+
+aws events put-rule \
+  --name fargate-microservices-codecommit-trigger \
+  --event-pattern '{
+    "source": ["aws.codecommit"],
+    "detail-type": ["CodeCommit Repository State Change"],
+    "detail": {
+      "repositoryName": ["fargate-microservices-code-repo"],
+      "event": ["referenceUpdated"]
+    }
+  }' \
+  --region ap-southeast-1
+
+  
+aws events put-targets \
+  --rule fargate-microservices-codecommit-trigger \
+  --targets "Id"="1","Arn"="arn:aws:codepipeline:ap-southeast-1:348184816643:fargate-microservices-pipeline","RoleArn"="arn:aws:iam::348184816643:role/service-role/cwe-role-ap-southeast-1-fargate-microservices-pipeline" \
+  --region ap-southeast-1
+
+aws events list-targets-by-rule \
+  --rule fargate-microservices-codecommit-trigger \
+  --region ap-southeast-1
+
+
+
+ECS cluster: fargate-microservices-cluster
+Services: user-service, product-service
+Task Defs: user-service-task, product-service-task
+
+CodeBuild: product-build-peoject, user-build-project\
+
+fargate-microservices-pipeline
